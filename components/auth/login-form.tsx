@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,28 +12,26 @@ import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export function LoginForm() {
+export function LoginForm({ message }: { message?: string }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [message, setMessage] = useState("")
+  const [statusMessage, setStatusMessage] = useState(message || "")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { signIn, user } = useAuth()
 
   useEffect(() => {
-    // Check if there's a message in the URL
-    const urlMessage = searchParams.get("message")
-    if (urlMessage) {
-      setMessage(urlMessage)
+    // Set message if provided as prop
+    if (message) {
+      setStatusMessage(message)
     }
 
     // Redirect if already logged in
     if (user) {
       router.push("/dashboard")
     }
-  }, [searchParams, user, router])
+  }, [message, user, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,9 +56,9 @@ export function LoginForm() {
         <CardDescription>Enter your credentials to access your financial data</CardDescription>
       </CardHeader>
       <CardContent>
-        {message && (
+        {statusMessage && (
           <Alert className="mb-4">
-            <AlertDescription>{message}</AlertDescription>
+            <AlertDescription>{statusMessage}</AlertDescription>
           </Alert>
         )}
         <form onSubmit={handleLogin} className="space-y-4">
