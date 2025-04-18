@@ -38,15 +38,22 @@ export function LoginForm({ message }: { message?: string }) {
     setError("")
     setLoading(true)
 
-    const { error } = await signIn(email, password)
+    try {
+      const { error: signInError } = await signIn(email, password)
 
-    if (error) {
-      setError(error)
+      if (signInError) {
+        setError(signInError)
+        setLoading(false)
+        return
+      }
+
+      // If we get here, login was successful
+      router.push("/dashboard")
+    } catch (err) {
+      console.error("Login error:", err)
+      setError(err instanceof Error ? err.message : "An unexpected error occurred")
       setLoading(false)
-      return
     }
-
-    router.push("/dashboard")
   }
 
   return (
@@ -76,7 +83,11 @@ export function LoginForm({ message }: { message?: string }) {
               required
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>

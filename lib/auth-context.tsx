@@ -30,48 +30,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
 
-      if (session?.user) {
-        // Get user profile
-        const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+        if (sessionError) {
+          console.error("Session error:", sessionError)
+          setLoading(false)
+          return
+        }
 
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          username: data?.username || "",
-        })
+        if (session?.user) {
+          // Set basic user info even without profile
+          const basicUser = {
+            id: session.user.id,
+            email: session.user.email || "",
+            username: session.user.user_metadata?.username || "",
+          }
+
+          try {
+            // Try to get user profile, but don't fail if table doesn't exist
+            const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+
+            if (data) {
+              setUser({
+                ...basicUser,
+                username: data.username || basicUser.username,
+              })
+            } else {
+              setUser(basicUser)
+            }
+          } catch (profileError) {
+            console.warn("Profile fetch error (table might not exist yet):", profileError)
+            setUser(basicUser)
+          }
+        }
+
+        setLoading(false)
+      } catch (err) {
+        console.error("Auth error:", err)
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     getUser()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        // Get user profile when auth state changes
-        const getProfile = async () => {
-          const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
-
-          setUser({
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      try {
+        if (session?.user) {
+          // Set basic user info even without profile
+          const basicUser = {
             id: session.user.id,
-            email: session.user.email!,
-            username: data?.username || "",
-          })
+            email: session.user.email || "",
+            username: session.user.user_metadata?.username || "",
+          }
+
+          try {
+            // Try to get user profile, but don't fail if table doesn't exist
+            const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+
+            if (data) {
+              setUser({
+                ...basicUser,
+                username: data.username || basicUser.username,
+              })
+            } else {
+              setUser(basicUser)
+            }
+          } catch (profileError) {
+            console.warn("Profile fetch error on auth change (table might not exist yet):", profileError)
+            setUser(basicUser)
+          }
+        } else {
+          setUser(null)
         }
 
-        getProfile()
-      } else {
-        setUser(null)
+        setLoading(false)
+        router.refresh()
+      } catch (err) {
+        console.error("Auth change error:", err)
+        setLoading(false)
       }
-
-      setLoading(false)
-      router.refresh()
     })
 
     return () => {
@@ -81,54 +124,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Sign up directly with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
         },
-        body: JSON.stringify({ email, password, username }),
       })
 
-      const data = await response.json()
+      if (error) {
+        return { error: error.message }
+      }
 
-      if (!response.ok) {
-        return { error: data.error }
+      if (!data.user) {
+        return { error: "Failed to create user" }
+      }
+
+      try {
+        // Try to create profile, but don't fail if table doesn't exist
+        await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+            username,
+            email,
+          },
+        ])
+      } catch (profileError) {
+        console.warn("Profile creation error (table might not exist yet):", profileError)
+        // Continue even if profile creation fails
       }
 
       return {}
     } catch (error) {
-      return { error: "An unexpected error occurred" }
+      console.error("Signup error:", error)
+      return { error: error instanceof Error ? error.message : "An unexpected error occurred during signup" }
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      // Sign in directly with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        return { error: data.error }
+      if (error) {
+        return { error: error.message }
       }
 
       return {}
     } catch (error) {
-      return { error: "An unexpected error occurred" }
+      console.error("Login error:", error)
+      return { error: error instanceof Error ? error.message : "An unexpected error occurred during login" }
     }
   }
 
   const signOut = async () => {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-    })
-
-    router.push("/login")
+    try {
+      await supabase.auth.signOut()
+      router.push("/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
   return <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>{children}</AuthContext.Provider>
