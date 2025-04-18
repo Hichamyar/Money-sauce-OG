@@ -57,10 +57,13 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1",
+    "zod": "latest",
     "immer": "latest",
     "use-sync-external-store": "latest",
-    "zustand": "latest"
+    "@supabase/supabase-js": "latest",
+    "zustand": "latest",
+    "@supabase/ssr": "latest",
+    "@supabase/auth-helpers-nextjs": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
