@@ -44,7 +44,7 @@ export function SignupForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto shadow-lg">
       <CardHeader>
         <CardTitle>Create an Account</CardTitle>
         <CardDescription>Sign up to start tracking your finances</CardDescription>

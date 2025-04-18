@@ -50,7 +50,7 @@ export function LoginForm({ message }: { message?: string }) {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto shadow-lg">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>Enter your credentials to access your financial data</CardDescription>
