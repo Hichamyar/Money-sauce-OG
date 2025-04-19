@@ -60,9 +60,8 @@
     "zod": "^3.24.1",
     "immer": "latest",
     "use-sync-external-store": "latest",
-    "@emotion/is-prop-valid": "latest",
-    "zustand": "latest",
-    "framer-motion": "latest"
+    "emoji-picker-react": "latest",
+    "zustand": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

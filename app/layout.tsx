@@ -5,6 +5,8 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import { FirstTimePrompt } from "@/components/first-time-prompt"
+import { Toaster } from "@/components/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,6 +29,8 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1 flex items-center justify-center w-full">{children}</main>
             <Footer />
+            <FirstTimePrompt />
+            <Toaster />
           </div>
         </ThemeProvider>
       </body>
