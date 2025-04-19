@@ -59,17 +59,12 @@ export const currencies: Currency[] = [
   { code: "MAD", symbol: "DH", name: "Moroccan Dirham" },
 ]
 
-// Add user ID to the store
-
-// Modify the store to include a userId field
 type FinanceState = {
-  userId: string | null // Add this line
   incomeSources: IncomeSource[]
   expenseCategories: ExpenseCategory[]
   expenses: Expense[]
   monthlyData: MonthlyData[]
   currency: Currency
-  setUserId: (userId: string | null) => void // Add this line
   setCurrency: (currency: Currency) => void
   addIncomeSource: (source: Omit<IncomeSource, "id">) => void
   updateIncomeSource: (id: string, source: Partial<IncomeSource>) => void
@@ -111,17 +106,11 @@ const defaultCategories: ExpenseCategory[] = [
 export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => ({
-      userId: null, // Add this line
       incomeSources: [],
       expenseCategories: defaultCategories,
       expenses: [],
       monthlyData: [],
       currency: currencies[0],
-
-      setUserId: (userId) => {
-        // Add this function
-        set({ userId })
-      },
 
       setCurrency: (currency) => {
         set({ currency })
@@ -315,13 +304,6 @@ export const useFinanceStore = create<FinanceState>()(
     }),
     {
       name: "finance-storage",
-      partialize: (state) => ({
-        ...state,
-        // Only persist data for the current user
-        incomeSources: state.userId ? state.incomeSources.filter((source) => source.userId === state.userId) : [],
-        expenses: state.userId ? state.expenses.filter((expense) => expense.userId === state.userId) : [],
-        monthlyData: state.userId ? state.monthlyData.filter((data) => data.userId === state.userId) : [],
-      }),
     },
   ),
 )

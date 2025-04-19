@@ -5,12 +5,10 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useFinanceStore } from "@/lib/finance-store"
-import { useTheme } from "next-themes"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const { updateMonthlyData, getCurrentMonth } = useFinanceStore()
-  const { theme } = useTheme()
 
   const currentMonth = getCurrentMonth()
 
